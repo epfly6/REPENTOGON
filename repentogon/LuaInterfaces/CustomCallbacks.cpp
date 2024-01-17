@@ -10,6 +10,7 @@
 #include "LuaLevelGenerator.h"
 #include "Log.h"
 #include "../Patches/XMLData.h"
+#include "Level.h"
 
 //Callback tracking for optimizations
 std::bitset<500> CallbackState; //I dont think we will add 500 callbacks but lets set it there for now
@@ -672,6 +673,8 @@ HOOK_METHOD(Music, DisableLayer, (int id) -> void) {
 
 //PRE_LEVEL_INIT Callback (id: 1060 enum pending)
 HOOK_METHOD(Level, Init, () -> void) {
+	levelASM.ForceSpecialQuest = 0;
+
 	const int callbackid = 1060;
 	if (CallbackState.test(callbackid - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
@@ -2219,7 +2222,7 @@ HOOK_METHOD(Room, RenderEntityLight, (Entity* ent, Vector& offset) -> void) {
 		lua_rawgeti(L, LUA_REGISTRYINDEX, g_LuaEngine->runCallbackRegistry->key);
 
 		lua::LuaResults result = lua::LuaCaller(L).push(callbackid)
-			.push(ent->GetType())
+			.push(*ent->GetType())
 			.push(ent, lua::Metatables::ENTITY)
 			.pushUserdataValue(offset, lua::Metatables::VECTOR)
 			.call(1);

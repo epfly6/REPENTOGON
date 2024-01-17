@@ -197,12 +197,30 @@ Accepts no return parameters.
 |:--|:--|:--|:--|:--|
 |1022 |MC_HUD_RENDER {: .copyable } | - | - | void |
 
+### MC_POST_HUD_RENDER {: .copyable }
+Accepts no return parameters.
+
+|ID|Name|Function Args|Optional Args|Return Type|
+|:--|:--|:--|:--|:--|
+|1024 |MC_POST_HUD_RENDER {: .copyable } | - | - | void |
+
 ### MC_MAIN_MENU_RENDER {: .copyable }
 Accepts no return parameters.
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
 |1023 |MC_MAIN_MENU_RENDER {: .copyable } | - | - | void |
+
+
+### MC_PRE_RENDER_CUSTOM_CHARACTER_MENU {: .copyable }
+Accepts no return parameters.
+
+???- info "Execution informations"
+    This callback only triggers when a custom character is selected, it doesn't trigger on regular characters.
+
+|ID|Name|Function Args|Optional Args|Return Type|
+|:--|:--|:--|:--|:--|
+|1333 |MC_PRE_RENDER_CUSTOM_CHARACTER_MENU {: .copyable } | int CharacterID,[Vector](../Vector.md) RenderPos,[Sprite](../Sprite.md) DefaultSprite | int CharacterID | void |
 
 
 ### MC_PRE_PAUSE_SCREEN_RENDER {: .copyable }
@@ -419,6 +437,15 @@ Accepts a table of parameters: `{TargetRoomIdx, Dimension}`
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
 |1061 |MC_PRE_CHANGE_ROOM {: .copyable } | (int TargetRoomIdx, int Dimension) | - | table |
+
+
+### MC_PICKUP_GET_COIN_VALUE
+Accepts `int` CoinValue to modify the amount of coins a coin can give you on pickup.
+
+|ID|Name|Function Args|Optional Args|Return Type|
+|:--|:--|:--|:--|:--|
+|1250 |MC_PICKUP_GET_COIN_VALUE {: .copyable } | ([EntityPickup](../EntityPickup.md) Pickup) | [CoinSubType](https://wofsauge.github.io/IsaacDocs/rep/enums/CoinSubType.html) | int CoinValue |
+
 
 ### MC_POST_PICKUP_SHOP_PURCHASE
 Accepts no return parameters.
@@ -1156,7 +1183,7 @@ The first parameter is the slot you should care about, the 2nd parameter (isslot
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
-|1140 |MC_POST_SAVESLOT_LOAD {: .copyable } | ( int saveslot, boolean isslotselected, int rawslot ) |  |  |
+|1470 |MC_POST_SAVESLOT_LOAD {: .copyable } | ( int saveslot, boolean isslotselected, int rawslot ) |  |  |
 
 ### MC_PRE_NEW_ROOM
 Accepts no return parameters.
