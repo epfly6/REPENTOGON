@@ -879,20 +879,20 @@ Accepts no return parameters.
 |1124 |MC_POST_SLOT_CREATE_EXPLOSION_DROPS {: .copyable } | ([EntitySlot](../EntitySlot.md)) | [SlotVariant](SlotVariant.md) | void |
 
 ### MC_PRE_SLOT_SET_PRIZE_COLLECTIBLE
-Used by Shell Game and Hell Game. 
+Used by Shell Game, Hell Game, and Crane Game.
 
 Accepts a [CollectibleType](https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html) to override what the game will pay out with.
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
-|1125 |MC_PRE_SLOT_SET_PRIZE_COLLECTIBLE {: .copyable } | ([EntitySlot](../EntitySlot.md)) | [SlotVariant](SlotVariant.md) | [CollectibleType](https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html) |
+|1125 |MC_PRE_SLOT_SET_PRIZE_COLLECTIBLE {: .copyable } | ([EntitySlot](../EntitySlot.md), [CollectibleType](https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html) Type) | [SlotVariant](SlotVariant.md) | [CollectibleType](https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html) |
 
 ### MC_POST_SLOT_SET_PRIZE_COLLECTIBLE
 Accepts no return parameters.
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
-|1126 |MC_POST_SLOT_SET_PRIZE_COLLECTIBLE {: .copyable } | ([EntitySlot](../EntitySlot.md)) | [SlotVariant](SlotVariant.md) | void |
+|1126 |MC_POST_SLOT_SET_PRIZE_COLLECTIBLE {: .copyable } | ([EntitySlot](../EntitySlot.md), [CollectibleType](https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html) Type) | [SlotVariant](SlotVariant.md) | void |
 
 ### MC_POST_PLAYER_COLLISION
 Runs after the on-collision code of this entity, assuming it wasn't skipped.
@@ -1044,13 +1044,13 @@ Return `true` to cancel hearts HUD rendering.
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
-|1118 |MC_PRE_PLAYERHUD_RENDER_HEARTS {: .copyable } | ([Vector](../Vector.md) Offset(?), [Sprite](../Sprite.md) HeartsSprite, [Vector](../Vector.md) Position, float Unknown) | - | boolean |
+|1118 |MC_PRE_PLAYERHUD_RENDER_HEARTS {: .copyable } | ([Vector](../Vector.md) Offset(?), [Sprite](../Sprite.md) HeartsSprite, [Vector](../Vector.md) Position, float Unknown, [EntityPlayer](../EntityPlayer.md) Player) | - | boolean |
 
 ### MC_POST_PLAYERHUD_RENDER_HEARTS
 
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
-|1091 |MC_POST_PLAYERHUD_RENDER_HEARTS {: .copyable } | ([Vector](../Vector.md) Offset(?), [Sprite](../Sprite.md) HeartsSprite, [Vector](../Vector.md) Position, float Unknown) | - | - |
+|1091 |MC_POST_PLAYERHUD_RENDER_HEARTS {: .copyable } | ([Vector](../Vector.md) Offset(?), [Sprite](../Sprite.md) HeartsSprite, [Vector](../Vector.md) Position, float Unknown, [EntityPlayer](../EntityPlayer.md) Player) | - | - |
 
 ### MC_PRE_GET_LIGHTING_ALPHA
 Accepts a `float` to modify the lighting alpha. Generally this is between 0 and 1 but you can technically go higher than this.
@@ -1854,3 +1854,20 @@ If you return a table, Repentogon will check that the values fall in the allowed
 |ID|Name|Function Args|Optional Args|Return Type|
 |:--|:--|:--|:--|:--|
 |1104 | MC_PRE_LEVEL_SELECT {: .copyable } | ([LevelStage](https://wofsauge.github.io/IsaacDocs/rep/enums/LevelStage.html) Level, [StageType](https://wofsauge.github.io/IsaacDocs/rep/enums/StageType.html) Type) | - | void 
+
+### MC_PRE_PICKUP_VOIDED
+This callback is called when a pickup is consumed with the void active or black rune. The `IsBlackRune` parameter indicates the source.
+If black rune is used, the callback gets fired both for pedestal items and for small pickups that turn into flies.
+Accepts `false` to cancel the pickup getting consumed.
+
+|ID|Name|Function Args|Optional Args|Return Type|
+|:--|:--|:--|:--|:--|
+|1265 |MC_PRE_PICKUP_VOIDED {: .copyable } | ([EntityPickup](https://wofsauge.github.io/IsaacDocs/rep/EntityPickup.html) Pickup, boolean IsBlackRune) | [PickupVariant](https://wofsauge.github.io/IsaacDocs/rep/enums/PickupVariant.html) | boolean |
+
+### MC_PRE_PICKUP_VOIDED_ABYSS
+This callback is called when a pickup is consumed with the abyss active. 
+Accepts `false` to cancel the pickup getting consumed.
+
+|ID|Name|Function Args|Optional Args|Return Type|
+|:--|:--|:--|:--|:--|
+|1266 |MC_PRE_PICKUP_VOIDED_ABYSS {: .copyable } | ([EntityPickup](https://wofsauge.github.io/IsaacDocs/rep/EntityPickup.html) Pickup) | [PickupVariant](https://wofsauge.github.io/IsaacDocs/rep/enums/PickupVariant.html) | boolean |
