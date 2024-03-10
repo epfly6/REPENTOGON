@@ -184,6 +184,7 @@ namespace lua {
         extern LIBZHL_API const char* EntityConfigMT;
         extern LIBZHL_API const char* EntityConfigEntityMT;
         extern LIBZHL_API const char* EntityConfigPlayerMT;
+        extern LIBZHL_API const char* EntityConfigBabyMT;
         extern LIBZHL_API const char* EntitySaveStateMT;
         extern LIBZHL_API const char* EntitySlotMT;
         extern LIBZHL_API const char* FXParamsMT;
@@ -215,6 +216,7 @@ namespace lua {
         extern LIBZHL_API const char* NightmareSceneMT;
         extern LIBZHL_API const char* NullFrameMT;
         extern LIBZHL_API const char* OptionsMenuMT;
+        extern LIBZHL_API const char* PauseMenuMT;
         extern LIBZHL_API const char* PersistentGameDataMT;
         extern LIBZHL_API const char* PlayerHUDMT;
         extern LIBZHL_API const char* PlayerHUDHeartMT;
@@ -241,6 +243,7 @@ namespace lua {
         extern LIBZHL_API const char* WeightedOutcomePickerMT;
         extern LIBZHL_API const char* CostumeSpriteDescMT;
         extern LIBZHL_API const char* RailManagerMT;
+        extern LIBZHL_API const char* MinimapConfigMT;
     }
 
     LIBZHL_API void UnloadMetatables();

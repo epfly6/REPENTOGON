@@ -13,7 +13,6 @@
 
 extern int handleWindowFlags(int flags);
 extern bool WindowBeginEx(const char* name, bool* p_open, ImGuiWindowFlags flags);
-extern bool imguiResized;
 extern bool menuShown;
 extern ImVec2 imguiSizeModifier;
 
@@ -288,6 +287,7 @@ struct ConsoleMega : ImGuiWindowObject {
         memset(inputBuf, 0, sizeof(inputBuf));
         historyPos = 0;
         autocompleteBuffer.clear();
+        reclaimFocus = true;
     }
 
     void Draw(bool isImGuiActive) {
@@ -297,16 +297,14 @@ struct ConsoleMega : ImGuiWindowObject {
         ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiCond_FirstUseEver);
         
         if (WindowBeginEx(windowName.c_str(), &enabled, handleWindowFlags(0))) {
-            if (imguiResized) {
-                ImGui::SetWindowPos(ImVec2(ImGui::GetWindowPos().x * imguiSizeModifier.x, ImGui::GetWindowPos().y * imguiSizeModifier.y));
-                ImGui::SetWindowSize(ImVec2(ImGui::GetWindowSize().x * imguiSizeModifier.x, ImGui::GetWindowSize().y * imguiSizeModifier.y));
-;            }
-
             AddWindowContextMenu();
             std::deque<Console_HistoryEntry>* history = g_Game->GetConsole()->GetHistory();
 
+
             // fill remaining window space minus the current font size (+ padding). fixes issue where the input is outside the window frame
-            float textboxHeight = -4 - (ImGui::GetStyle().FramePadding.y * 2) - (imFontUnifont->Scale * imFontUnifont->FontSize);
+            bool textInputScrollbarVisible = imFontUnifont->CalcTextSizeA(imFontUnifont->FontSize, FLT_MAX, 0.0f, inputBuf, inputBuf + strlen(inputBuf)).x * imFontUnifont->Scale > ImGui::GetContentRegionAvail().x;
+            float textboxHeight = -4 - (ImGui::GetStyle().FramePadding.y * 2) - (imFontUnifont->Scale * imFontUnifont->FontSize) - (textInputScrollbarVisible ? 14 : 0);
+
             if (!isImGuiActive)
             {
               textboxHeight = 0;
@@ -383,24 +381,38 @@ struct ConsoleMega : ImGuiWindowObject {
               }
               ImVec2 drawPos = ImGui::GetCursorPos();
 
-              ImGuiInputTextFlags consoleFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CtrlEnterForNewLine;
-              if (ImGui::InputTextWithHint("##", LANG.CONSOLE_CMD_HINT, inputBuf, 1024, consoleFlags, &TextEditCallbackStub, (void*)this)) {
-                char* s = inputBuf;
-                Strtrim(s);
-                std::string fixedCommand = FixSpawnCommand(s);
-                s = (char*)fixedCommand.c_str();
-                if (s[0])
-                  ExecuteCommand(s);
-                else // close console when nothing is in the textbox
-                  menuShown = false;
-                reclaimFocus = true;
+              ImGuiInputTextFlags consoleFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_NoHorizontalScroll;
+                
+              // This works around multiline losing focus on enter (genius!)
+              if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0) && !textInputScrollbarVisible)
+                  ImGui::SetKeyboardFocusHere(0);
+
+              if (ImGui::InputTextMultiline("##", inputBuf, 1024, ImVec2(0, (ImGui::GetStyle().FramePadding.y * 2) + (imFontUnifont->Scale * imFontUnifont->FontSize) + (textInputScrollbarVisible ? 14 : 0)), consoleFlags, &TextEditCallbackStub, (void*)this)) {
+                  char* s = inputBuf;
+                  Strtrim(s);
+                  std::string fixedCommand = FixSpawnCommand(s);
+                  s = (char*)fixedCommand.c_str();
+                  if (s[0])
+                      ExecuteCommand(s);
+                  reclaimFocus = true;
               }
               ImGui::PopItemWidth();
 
               ImGui::SetItemDefaultFocus();
+
               if (reclaimFocus) {
                 ImGui::SetKeyboardFocusHere(-1);
                 reclaimFocus = false;
+              }
+
+              // Handle hint
+              if (!inputBuf[0])
+              {
+                  ImGui::SetCursorPos(ImVec2(drawPos.x + ImGui::GetStyle().FramePadding.x, drawPos.y + ImGui::GetStyle().FramePadding.y));
+
+                  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1));
+                  ImGui::Text(LANG.CONSOLE_CMD_HINT);
+                  ImGui::PopStyleColor();
               }
 
               // Handle preview text
@@ -433,6 +445,26 @@ struct ConsoleMega : ImGuiWindowObject {
     {
         switch (data->EventFlag)
         {
+            case ImGuiInputTextFlags_CallbackAlways:
+            {
+                static float textSize = 7 * imFontUnifont->Scale; //TODO This works for now, but unhardcode the 7 later on to account for different fonts.
+
+                // To help accomodate for the horizontal scrollbar hacks we've implemented in ImGui, we handle scrolling manually.
+                // I don't like it, but it's still much better than how we used to handle this (we didn't)
+                static int bufLength = 0;
+                ImGui::SetScrollX(ImGui::GetScrollX() + (textSize * (data->BufTextLen - bufLength)));
+
+                bufLength = data->BufTextLen;
+
+                if (data->CursorPos * textSize < ImGui::GetScrollX())
+                    ImGui::SetScrollX(ImGui::GetScrollX() - textSize);
+              
+                if (data->CursorPos * textSize > ImGui::GetScrollX() + ImGui::GetContentRegionAvail().x)
+                    ImGui::SetScrollX(ImGui::GetScrollX() + textSize);
+                      
+                break;
+            }
+
             case ImGuiInputTextFlags_CallbackCompletion:
             {
                 if (autocompleteBuffer.size() > 0) {
@@ -456,7 +488,7 @@ struct ConsoleMega : ImGuiWindowObject {
                 std::string strBuf = data->Buf;
                 std::vector<std::string> cmdlets = ParseCommand(strBuf);
                 autocompleteBuffer.clear();
-                autocompletePos = 0;
+                autocompletePos = -1;
 
                 if (cmdlets.size() == 1) {
                     bool inGame = !(g_Manager->GetState() != 2 || !g_Game);
@@ -467,7 +499,7 @@ struct ConsoleMega : ImGuiWindowObject {
                             }
                     }
                 }
-
+                
                 if (cmdlets.size() >= 2 || (cmdlets.size() < 3 && std::isspace(static_cast<unsigned char>(strBuf.back())))) {
                     std::string commandName = cmdlets.front();
                     commandName.erase(remove(commandName.begin(), commandName.end(), ' '), commandName.end());
@@ -1057,7 +1089,7 @@ struct ConsoleMega : ImGuiWindowObject {
 
                             extern std::bitset<500> CallbackState;
 
-                            int callbackId = 1120;
+                            const int callbackId = 1120;
                             if (CallbackState.test(callbackId - 1000)) {
                                 lua_State* L = g_LuaEngine->_state;
                                 lua::LuaStackProtector protector(L);

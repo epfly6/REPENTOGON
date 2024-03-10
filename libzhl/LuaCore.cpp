@@ -749,6 +749,7 @@ namespace lua {
 		const char* EntityConfigMT = "EntityConfig";
 		const char* EntityConfigEntityMT = "EntityConfigEntity";
 		const char* EntityConfigPlayerMT = "EntityConfigPlayer";
+		const char* EntityConfigBabyMT = "EntityConfigBaby";
 		const char* EntitySaveStateMT = "EntitySaveState";
 		const char* EntitySlotMT = "EntitySlot";
 		const char* FXParamsMT = "FXParams";
@@ -780,6 +781,7 @@ namespace lua {
 		const char* NightmareSceneMT = "NightmareScene";
 		const char* NullFrameMT = "NullFrame";
 		const char* OptionsMenuMT = "OptionsMenu";
+		const char* PauseMenuMT = "PauseMenu";
 		const char* PersistentGameDataMT = "PersistentGameData";
 		const char* PlayerHUDMT = "PlayerHUD";
 		const char* PlayerHUDHeartMT = "PlayerHUDHeart";
@@ -806,6 +808,7 @@ namespace lua {
 		const char* WeightedOutcomePickerMT = "WeightedOutcomePicker";
 		const char* CostumeSpriteDescMT = "CostumeSpriteDesc";
 		const char* RailManagerMT = "RailManager";
+		const char* MinimapConfigMT = "MinimapConfig";
 	}
 
 	void TableAssoc(lua_State* L, std::string const& name, int value) {

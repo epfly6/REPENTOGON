@@ -1,4 +1,5 @@
 #include "ASMPatcher.hpp"
+#include "../Patches/ASMPatches.h"
 #include "ConsoleMega.h"
 #include "CustomImGui.h"
 #include "GameOptions.h"
@@ -41,8 +42,6 @@ std::string iniFilePath;
 static bool imguiInitialized = false;
 static bool show_app_style_editor = false;
 static bool shutdownInitiated = false;
-static bool imguiResized;
-static ImVec2 imguiSizeModifier;
 
 HelpMenu helpMenu;
 LogViewer logViewer;
@@ -287,6 +286,14 @@ LRESULT CALLBACK windowProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			break;
 		}
 
+		case VK_RETURN: {
+			if (menuShown && !console.inputBuf[0]) {
+				menuShown = false;
+				return true;
+			}
+			break;
+		}
+
 		case VK_ESCAPE: {
 			if (menuShown) {
 				menuShown = false;
@@ -406,8 +413,7 @@ LRESULT CALLBACK windowProc_hook(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 ImFont* imFontUnifont = NULL;
 
-HOOK_GLOBAL(OpenGL::wglSwapBuffers, (HDC hdc)->bool, __stdcall)
-{
+void __stdcall RunImGui(HDC hdc) {
 	static std::map<int, ImFont*> fonts;
 
 	static float unifont_global_scale = 1;
@@ -426,6 +432,7 @@ HOOK_GLOBAL(OpenGL::wglSwapBuffers, (HDC hdc)->bool, __stdcall)
 		ImGui::GetStyle().FrameRounding = 4.0f; // rounded edges (default was 0)
 		ImGui::GetStyle().FramePadding.x = 6.0f; // more padding inside of objects to prevent ugly text clipping (default was 4)
 		ImGui::GetStyle().WindowTitleAlign = ImVec2(0.5f, 0.5f);
+		ImGui::GetStyle().DisplayWindowPadding = ImVec2(100.0f, 100.0f); // This should ensure that more of the window is visible when resizing.
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.IniFilename = NULL; // Disable vanilla .ini file management
@@ -436,7 +443,6 @@ HOOK_GLOBAL(OpenGL::wglSwapBuffers, (HDC hdc)->bool, __stdcall)
 		io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 		ImGui::CaptureMouseFromApp();
 		ImGui::CaptureKeyboardFromApp();
-
 		ImFontConfig cfg;
 		cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
 		cfg.OversampleH = 1;
@@ -514,16 +520,6 @@ HOOK_GLOBAL(OpenGL::wglSwapBuffers, (HDC hdc)->bool, __stdcall)
 		glBindTexture(GL_TEXTURE_2D, last_texture);
 	}
 	
-	imguiResized = false;
-	static ImVec2 oldSize = ImVec2(0, 0);
-	if ((oldSize.x != ImGui::GetMainViewport()->Size.x || oldSize.y != ImGui::GetMainViewport()->Size.y) &&
-		(oldSize.x > 1 && oldSize.y > 1) &&
-		(ImGui::GetMainViewport()->Size.x > 1 && ImGui::GetMainViewport()->Size.y > 1)) { // no operator? (megamind stares intently at the camera)
-		imguiResized = true;
-		imguiSizeModifier = ImVec2(ImGui::GetMainViewport()->Size.x / oldSize.x, ImGui::GetMainViewport()->Size.y / oldSize.y);
-	}
-	oldSize = ImGui::GetMainViewport()->Size;
-
 	if (menuShown) {
 		if (ImGui::BeginMainMenuBar()) {
 			ImGui::MenuItem(ICON_FA_CHEVRON_LEFT"",NULL,&menuShown);
@@ -565,8 +561,28 @@ HOOK_GLOBAL(OpenGL::wglSwapBuffers, (HDC hdc)->bool, __stdcall)
 
 	// Draw the overlay
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
 
-	return super(hdc);
+
+/*
+* Initially, we were hooking wglSwapBuffers directly for ImGui. This worked, but wouldn't appear in screen sharing in Discord and streaming in OBS.
+* The only solution for this is to inject ImGui earlier than Discord and OBS do, and we need an assembly patch for that.
+* Manager::Render calls SwapBuffers three times- this call was the one that seemed to actually fire for me, but this might need more testing.
+* We push HWND to the stack twice. The first push will be taken as an argument for ImGui, and the second for SwapBuffers.
+*/
+void HookImGui() {
+	SigScan scanner("ffb0????????ffd75f");
+	scanner.Scan();
+	void* addr = scanner.GetAddress();
+	printf("[REPENTOGON] Injecting Dear ImGui at %p\n", addr);
+	void* imguiAddr = &RunImGui;
+	ASMPatch patch;
+	patch.AddBytes("\xFF\xB0\x34\x02").AddZeroes(2) // push dword ptr ds:[eax+234]
+		.AddBytes("\xFF\xB0\x34\x02").AddZeroes(2) // push dword ptr ds:[eax+234]
+		.AddInternalCall(imguiAddr)
+		.AddRelativeJump((char*)addr + 0x5);
+
+	sASMPatcher.PatchAt(addr, &patch);
 }
 
 HOOK_METHOD(Console, Render, ()->void)

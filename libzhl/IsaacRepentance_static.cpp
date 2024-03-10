@@ -1,4 +1,5 @@
 #include "IsaacRepentance.h"
+#include "Log.h"
 
 bool Room::IsValidRailType(lua_Integer rail) {
 	if (rail < 0) {
@@ -230,3 +231,29 @@ bool Entity_Player::AddSmeltedTrinket(int trinketID, bool firstTime) {
 	}
 	return trinketAdded;
 };
+
+void ScoreSheet::AddFinishedStage(int stage, int stageType, unsigned int time) {
+	if ((_runTimeLevel < stage) && g_Game->GetDailyChallenge()._id == 0) {
+		_runTimeLevel = stage;
+		_runTimeLevelType = stageType;
+		_runTime = time;
+	}
+	return;
+}
+
+void EntityList_EL::Untie() {
+	if (!_sublist) {
+		ZHL::Log("[ERROR] Attempting to untie a list that is not a sublist, ignoring\n");
+		return;
+	}
+
+	Entity** entities = (Entity**)calloc(_size, sizeof(Entity*));
+	if (!entities) {
+		ZHL::Log("[CRITICAL] Unable to allocate memory to untie sublist, ignoring\n");
+		return;
+	}
+
+	_sublist = false;
+	memcpy(entities, _data, _size * sizeof(Entity*));
+	_data = entities;
+}

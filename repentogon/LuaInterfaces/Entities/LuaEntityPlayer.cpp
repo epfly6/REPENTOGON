@@ -1367,6 +1367,13 @@ LUA_FUNCTION(Lua_PlayerAddLeprosy) {
 	return 0;
 }
 
+LUA_FUNCTION(Lua_PlayerGetUrnSouls) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	lua_pushinteger(L, player->_urnSouls);
+
+	return 1;
+}
+
 LUA_FUNCTION(Lua_PlayerAddUrnSouls) {
 	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
 	int count = (int)luaL_checkinteger(L, 2);
@@ -1891,6 +1898,24 @@ LUA_FUNCTION(Lua_PlayerSetKeepersSackBonus) {
 	return 0;
 }
 
+LUA_FUNCTION(Lua_PlayerGetGnawedLeafTimer) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	lua_pushinteger(L, player->_gnawedLeafTimer);
+	return 1;
+}
+
+LUA_FUNCTION(Lua_PlayerSetGnawedLeafTimer) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	player->_gnawedLeafTimer = (int)luaL_checkinteger(L, 2);
+	return 0;
+}
+
+LUA_FUNCTION(Lua_PlayerClearQueueItem) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	player->ClearQueueItem();
+	return 0;
+}
+
 HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	super();
 
@@ -2023,6 +2048,7 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "AddBoneOrbital", Lua_PlayerAddBoneOrbital },
 		//{ "AddItemCard", Lua_PlayerAddItemCard },
 		{ "AddLeprosy", Lua_PlayerAddLeprosy },
+		{ "GetUrnSouls", Lua_PlayerGetUrnSouls },
 		{ "AddUrnSouls", Lua_PlayerAddUrnSouls },
 		{ "CanAddCollectibleToInventory", Lua_PlayerCanAddCollectibleToInventory },
 		{ "CanCrushRocks", Lua_PlayerCanCrushRocks },
@@ -2074,6 +2100,9 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		//{ "AttachMinecart", Lua_PlayerAttachMinecart },
 		{ "GetKeepersSackBonus", Lua_PlayerGetKeepersSackBonus },
 		{ "SetKeepersSackBonus", Lua_PlayerSetKeepersSackBonus },
+		{ "GetGnawedLeafTimer", Lua_PlayerGetGnawedLeafTimer },
+		{ "SetGnawedLeafTimer", Lua_PlayerSetGnawedLeafTimer },
+		{ "ClearQueueItem", Lua_PlayerClearQueueItem },
 		{ NULL, NULL }
 	};
 	lua::RegisterFunctions(_state, lua::Metatables::ENTITY_PLAYER, functions);

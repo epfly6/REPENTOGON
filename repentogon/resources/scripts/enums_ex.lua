@@ -1,15 +1,17 @@
 ModCallbacks.MC_PRE_ADD_COLLECTIBLE = 1004
 ModCallbacks.MC_POST_ADD_COLLECTIBLE = 1005
-ModCallbacks.MC_POST_TAKE_DMG = 1006
+ModCallbacks.MC_POST_TAKE_DMG = 1006 -- deprecated but still in here for backwards compatibility
 ModCallbacks.MC_POST_ENTITY_TAKE_DMG = 1006
-ModCallbacks.MC_ENTITY_TAKE_DMG = 1007
+--ModCallbacks.DEPRECATED_MC_ENTITY_TAKE_DMG = 1007  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_PRE_PLAYER_TAKE_DMG = 1008
--- free
+ModCallbacks.MC_PRE_PLAYER_ADD_HEARTS = 1009
+ModCallbacks.MC_POST_PLAYER_ADD_HEARTS = 1010
 ModCallbacks.MC_POST_GRID_ROCK_DESTROY = 1011
 ModCallbacks.MC_GRID_HURT_DAMAGE = 1012
 ModCallbacks.MC_POST_GRID_HURT_DAMAGE = 1013
 ModCallbacks.MC_HUD_UPDATE = 1020
-ModCallbacks.MC_HUD_POST_UPDATE = 1021
+ModCallbacks.MC_HUD_POST_UPDATE = 1021 -- deprecated but still in here for backwards compatibility
+ModCallbacks.MC_POST_HUD_UPDATE = 1021
 ModCallbacks.MC_HUD_RENDER = 1022
 ModCallbacks.MC_POST_HUD_RENDER = 1024
 ModCallbacks.MC_MAIN_MENU_RENDER = 1023
@@ -18,7 +20,9 @@ ModCallbacks.MC_POST_SFX_PLAY = 1031
 ModCallbacks.MC_PRE_MUSIC_PLAY = 1034
 ModCallbacks.MC_PRE_MUSIC_LAYER_TOGGLE = 1035
 ModCallbacks.MC_PRE_RENDER_PLAYER_HEAD = 1038
+ModCallbacks.MC_POST_RENDER_PLAYER_HEAD = 1045
 ModCallbacks.MC_PRE_RENDER_PLAYER_BODY = 1039
+ModCallbacks.MC_POST_RENDER_PLAYER_BODY = 1046
 ModCallbacks.MC_PRE_ENTITY_THROW = 1040
 ModCallbacks.MC_POST_ENTITY_THROW = 1041
 ModCallbacks.MC_PLAYER_INIT_POST_LEVEL_INIT_STATS = 1042
@@ -86,7 +90,7 @@ ModCallbacks.MC_POST_DEVIL_CALCULATE = 1133
 ModCallbacks.MC_COMPLETION_MARK_GET = 1047
 ModCallbacks.MC_POST_COMPLETION_MARK_GET = 1048
 ModCallbacks.MC_PRE_COMPLETION_EVENT = 1049
-ModCallbacks.MC_USE_PILL = 1001
+--ModCallbacks.DEPRECATED_MC_USE_PILL = 1001  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_PLAYERHUD_RENDER_ACTIVE_ITEM = 1079
 ModCallbacks.MC_PRE_PLAYERHUD_RENDER_HEARTS = 1118
 ModCallbacks.MC_POST_PLAYERHUD_RENDER_HEARTS = 1091
@@ -109,32 +113,34 @@ ModCallbacks.MC_PRE_BACKDROP_RENDER_WALLS = 1106
 ModCallbacks.MC_PRE_BACKDROP_RENDER_FLOOR = 1107
 ModCallbacks.MC_PRE_BACKDROP_RENDER_WATER = 1108
 ModCallbacks.MC_POST_BACKDROP_PRE_RENDER_WALLS = 1109
+ModCallbacks.MC_PRE_BACKDROP_CHANGE = 1141
+ModCallbacks.MC_POST_BACKDROP_CHANGE = 1142
 ModCallbacks.MC_PRE_PLAYER_USE_BOMB = 1220
 ModCallbacks.MC_POST_PLAYER_USE_BOMB = 1221
 ModCallbacks.MC_NPC_PICK_TARGET = 1222
-ModCallbacks.MC_PRE_PLAYER_COLLISION = 1230
+ModCallbacks.MC_POST_NPC_DARK_RED_CHAMPION_REGEN = 1223
+--ModCallbacks.DEPRECATED_MC_PRE_PLAYER_COLLISION = 1230  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_PLAYER_COLLISION = 1231
-ModCallbacks.MC_PRE_TEAR_COLLISION = 1232
+--ModCallbacks.DEPRECATED_MC_PRE_TEAR_COLLISION = 1232  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_TEAR_COLLISION = 1233
-ModCallbacks.MC_PRE_FAMILIAR_COLLISION = 1234
+--ModCallbacks.DEPRECATED_MC_PRE_FAMILIAR_COLLISION = 1234  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_FAMILIAR_COLLISION = 1235
-ModCallbacks.MC_PRE_BOMB_COLLISION = 1236
+--ModCallbacks.DEPRECATED_MC_PRE_BOMB_COLLISION = 1236  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_BOMB_COLLISION = 1237
-ModCallbacks.MC_PRE_PICKUP_COLLISION = 1238
+--ModCallbacks.DEPRECATED_MC_PRE_PICKUP_COLLISION = 1238  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_PICKUP_COLLISION = 1239
 ModCallbacks.MC_PRE_SLOT_COLLISION = 1240
 ModCallbacks.MC_POST_SLOT_COLLISION = 1241
-ModCallbacks.MC_PRE_KNIFE_COLLISION = 1242
+--ModCallbacks.DEPRECATED_MC_PRE_KNIFE_COLLISION = 1242  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_KNIFE_COLLISION = 1243
-ModCallbacks.MC_PRE_PROJECTILE_COLLISION = 1244
+--ModCallbacks.DEPRECATED_MC_PRE_PROJECTILE_COLLISION = 1244  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_PROJECTILE_COLLISION = 1245
-ModCallbacks.MC_PRE_NPC_COLLISION = 1246
+--ModCallbacks.DEPRECATED_MC_PRE_NPC_COLLISION = 1246  -- Re-implementation of this callback used to use a different ID, now it uses the original callback ID
 ModCallbacks.MC_POST_NPC_COLLISION = 1247
 ModCallbacks.MC_PRE_LASER_COLLISION = 1248
 ModCallbacks.MC_POST_LASER_COLLISION = 1249
 ModCallbacks.MC_CONSOLE_AUTOCOMPLETE = 1120
 ModCallbacks.MC_PLAYER_INIT_PRE_LEVEL_INIT_STATS = 1127
-ModCallbacks.MC_CUSTOM_CHARACTER_UNLOCKED = 1140
 ModCallbacks.MC_PRE_NEW_ROOM = 1200
 ModCallbacks.MC_PRE_MEGA_SATAN_ENDING = 1201
 ModCallbacks.MC_POST_MODS_LOADED = 1210
@@ -161,6 +167,7 @@ ModCallbacks.MC_IS_PERSISTENT_ROOM_ENTITY = 1263
 ModCallbacks.MC_PRE_PLAYERHUD_TRINKET_RENDER = 1264
 ModCallbacks.MC_PRE_PICKUP_VOIDED = 1265
 ModCallbacks.MC_PRE_PICKUP_VOIDED_ABYSS = 1266
+ModCallbacks.MC_PRE_PICKUP_COMPOSTED = 1267
 
 ModCallbacks.MC_PRE_RENDER_CUSTOM_CHARACTER_MENU = 1333
 
@@ -232,6 +239,33 @@ ModCallbacks.MC_POST_SAVESLOT_LOAD = 1470
 
 ModCallbacks.MC_PRE_CHALLENGE_DONE = 1471
 ModCallbacks.MC_POST_CHALLENGE_DONE = 1472
+
+ModCallbacks.MC_PRE_FAMILIAR_CAN_CHARM = 1473
+
+ModCallbacks.MC_POST_ACHIEVEMENT_UNLOCK = 1476
+ModCallbacks.MC_PRE_MINIMAP_UPDATE = 1477
+ModCallbacks.MC_POST_MINIMAP_UPDATE = 1478
+ModCallbacks.MC_PRE_MINIMAP_RENDER = 1479
+ModCallbacks.MC_POST_MINIMAP_RENDER = 1480
+
+local function AddEnumToNamespace(namespace, enums)
+	for k,v in pairs(enums) do
+		rawset(namespace, k, v)
+	end
+end
+
+AddHealthType={	
+	NONE	=	0,
+	RED		=	1<<0,
+	MAX		=	1<<1,
+	SOUL	=	1<<2,
+	BLACK	=	1<<3,
+	ETERNAL	=	1<<4,
+	GOLDEN	=	1<<5,
+	BONE	=	1<<6,
+	ROTTEN	=	1<<7,
+	BROKEN	=	1<<8
+}
 
 DeliriumCallbacks = {
     PRE_TRANSFORMATION = "DeliriumPreTransformation",
@@ -1068,7 +1102,7 @@ Achievement = {
 	REVERSED_THE_HIGH_PRIESTESS = 526, REVERSED_HIGH_PRIESTESS = 526,
 	REVERSED_THE_EMPRESS = 527, REVERSED_EMPRESS = 527,
 	REVERSED_THE_EMPEROR = 528, REVERSED_EMPEROR = 528,
-	REVERSED_THE_HEIROPHANT = 529, RESERVED_HEIROPHANT = 529,
+	REVERSED_THE_HIEROPHANT = 529, REVERSED_HIEROPHANT = 529,
 	REVERSED_THE_LOVERS = 530, REVERSED_LOVERS = 530,
 	REVERSED_THE_CHARIOT = 531, REVERSED_CHARIOT = 531,
 	REVERSED_JUSTICE = 532,
@@ -2346,6 +2380,7 @@ XMLNode = {
 	BOSSRUSHWAVE = 28,
 	PLAYERFORM = 29,
 	NULLITEM = 30,
+	BOSSCOLOR = 31,
 }
 
 AutocompleteType = {
@@ -2494,3 +2529,14 @@ SpecialQuest = {
 	MIRROR = 1,
 	MINESHAFT = 2,
 }
+
+AddEnumToNamespace(BlendMode, {
+	ADD = 0,
+	NORMAL = 1,
+	MULTIPLY = 2,
+})
+
+--deprecated enums
+
+Achievement.REVERSED_THE_HEIROPHANT = 529
+Achievement.RESERVED_HEIROPHANT = 529

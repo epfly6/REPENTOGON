@@ -1,3 +1,5 @@
+#include "IsaacRepentance.h"
+
 #include "ASMPatcher.hpp"
 #include "../ASMPatches.h"
 
@@ -86,8 +88,8 @@ void PatchPreLaserCollision() {
 * We need to patch into both Entity::TakeDamage AND EntityPlayer::TakeDamage.
 */
 bool __stdcall ProcessPreDamageCallback(Entity* entity, char* ebp, bool isPlayer) {
-	int callbackid = 1007;
-	if (CallbackState.test(callbackid - 1000)) {
+	const int callbackid = 11;
+	if (VanillaCallbackState.test(callbackid)) {
 		// Obtain inputs as offsets from EBP (same way the compiled code reads them).
 		// As pointers so we can modify them :)
 		uint64_t* damageFlags = (uint64_t*)(ebp + 0x0C);
@@ -238,6 +240,9 @@ void PatchPreEntityTakeDamageCallbacks() {
 	InjectPreDamageCallback(playerTakeDmgScanner.GetAddress(), true);
 }
 
+// Even though I patched overtop the calls to this callback, super kill it for good measure.
+HOOK_METHOD(LuaEngine, EntityTakeDamage, (Entity* entity, float damage, unsigned long long damageFlags, EntityRef* source, int damageCountdown) -> bool) { return true; }
+
 // End of ENTITY_TAKE_DMG patches
 
 /* * MC_POST_ENTITY_TAKE_DMG * *
@@ -248,7 +253,7 @@ void PatchPreEntityTakeDamageCallbacks() {
 */
 
 void __stdcall ProcessPostDamageCallback(Entity* entity, char* ebp, bool isPlayer) {
-	int callbackid = 1006;
+	const int callbackid = 1006;
 	if (CallbackState.test(callbackid - 1000)) {
 		// Obtain inputs as offsets from EBP (same way the compiled code reads them).
 		unsigned __int64 damageFlags = *(unsigned __int64*)(ebp + 0x0C);
@@ -326,7 +331,7 @@ void PatchPostEntityTakeDamageCallbacks() {
 
 // MC_PRE_PLAYER_USE_BOMB
 bool __stdcall ProcessPrePlayerUseBombCallback(Entity_Player* player) {
-	int callbackid = 1220;
+	const int callbackid = 1220;
 	if (CallbackState.test(callbackid - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
 		lua::LuaStackProtector protector(L);
@@ -364,7 +369,7 @@ void ASMPatchPrePlayerUseBomb() {
 
 // MC_POST_PLAYER_USE_BOMB
 void __stdcall ProcessPostPlayerUseBombCallback(Entity_Player* player, Entity_Bomb* bomb) {
-	int callbackid = 1221;
+	const int callbackid = 1221;
 	if (CallbackState.test(callbackid - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
 		lua::LuaStackProtector protector(L);
@@ -396,7 +401,7 @@ void ASMPatchPostPlayerUseBomb() {
 
 // MC_PRE_M_MORPH_ACTIVE
 int __stdcall RunPreMMorphActiveCallback(Entity_Player* player, int collectibleId) {
-	int callbackId = 1190;
+	const int callbackId = 1190;
 	if (CallbackState.test(callbackId - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
 		lua::LuaStackProtector protector(L);
@@ -453,7 +458,7 @@ void __stdcall TrySplitTrampoline(Entity_NPC* npc, bool result) {
 	resSplit = result;
 
 	if (npc != nullptr) {
-		int callbackid = 1191;
+		const int callbackid = 1191;
 
 		if (CallbackState.test(callbackid - 1000)) {
 			lua_State* L = g_LuaEngine->_state;
@@ -640,6 +645,7 @@ bool __stdcall RunPrePickupVoidedBlackRune(Entity_Pickup* pickup) {
 	return true;
 }
 
+// this is so repetitive, might restructure it later
 void ASMPatchPrePickupVoidedBlackRune() {
 	ASMPatch::SavedRegisters savedRegisters(ASMPatch::SavedRegisters::Registers::GP_REGISTERS_STACKLESS, true);
 	ASMPatch patch;
@@ -706,4 +712,102 @@ void ASMPatchPrePickupVoidedAbyss() {
 		.AddRelativeJump((char*)addr + 0x6);
 
 	sASMPatcher.PatchAt(addr, &patch);
+}
+
+bool __stdcall RunPrePickupComposted(Entity_Pickup* pickup) {
+	const int callbackid = 1267;
+
+	if (CallbackState.test(callbackid - 1000)) {
+		lua_State* L = g_LuaEngine->_state;
+		lua::LuaStackProtector protector(L);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, g_LuaEngine->runCallbackRegistry->key);
+
+		lua::LuaResults result = lua::LuaCaller(L).push(callbackid)
+			.push(*pickup->GetVariant())
+			.push(pickup, lua::Metatables::ENTITY_PICKUP)
+			.call(1);
+
+		if (!result) {
+			if (lua_isboolean(L, -1)) {
+				return (bool)lua_toboolean(L, -1);
+			}
+		}
+	}
+
+	return true;
+}
+
+void ASMPatchPrePickupComposted() {
+	ASMPatch::SavedRegisters savedRegisters(ASMPatch::SavedRegisters::Registers::GP_REGISTERS_STACKLESS, true);
+	ASMPatch patch;
+
+	SigScan scanner("8b4028ffd0ff8570faffff8d8e981600006a0268e0010000e8????????8bc8e8????????8bcf85c075168d8538f3ffff50e8????????508bce");
+	scanner.Scan();
+	void* addr = scanner.GetAddress();
+
+	printf("[REPENTOGON] Patching Entity_Player::UseActiveItem at %p\n", addr);
+
+	patch.PreserveRegisters(savedRegisters)
+		.Push(ASMPatch::Registers::ECX) // push the pickup
+		.AddInternalCall(RunPrePickupComposted)
+		.AddBytes("\x84\xC0") // test al, al
+		.RestoreRegisters(savedRegisters)
+		.AddConditionalRelativeJump(ASMPatcher::CondJumps::JZ, (char*)addr + 0x58) // jump for false
+		.AddBytes(ByteBuffer().AddAny((char*)addr, 0x5)) // restore mov eax, dword[eax + 0x28]
+		.AddRelativeJump((char*)addr + 0x5);
+
+	sASMPatcher.PatchAt(addr, &patch);
+}
+
+void __stdcall RunPostChampionRegenCallback(Entity_NPC* npc) {
+	// These calls get skipped over due to the placement of the patch, so just do them here.
+	npc->_pathfinder.Reset();
+	npc->ResetColor();
+
+	const int callbackid = 1223;
+	if (CallbackState.test(callbackid - 1000)) {
+		lua_State* L = g_LuaEngine->_state;
+		lua::LuaStackProtector protector(L);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, g_LuaEngine->runCallbackRegistry->key);
+		lua::LuaCaller(L).push(callbackid)
+			.push(*npc->GetType())
+			.push(npc, lua::Metatables::ENTITY_NPC)
+			.call(0);
+	}
+}
+
+void ASMPatchPostChampionRegenCallback() {
+	// Scan for the address to jump to after we're done.
+	// This is where the code would end up after the regen is done.
+	SigScan exitScanner("8d77??83bf????????19");
+	exitScanner.Scan();
+	void* exitAddr = exitScanner.GetAddress();
+
+	// The easiest place to patch in was over the call to NPCAI_Pathfinder::Reset()
+	// It's the last thing that is done in the block that ONLY handles the end of the regen, after the Entity_NPC's Sprite is reset, etc.
+	// There's actually two of them because Clickety Clacks have some special handling for being dark red champions, but we can patch both the same.
+	const std::vector<std::string> signatures = {
+		"e8????????eb??8bcfe8????????d80d",  // NPCAI_Pathfinder::Reset() call for most entities
+		"e8????????e9????????68????????8d8f"  // NPCAI_Pathfinder::Reset() call for clickety clacks specifically
+	};
+
+	for (const std::string& sig : signatures) {
+		ASMPatch::SavedRegisters savedRegisters(ASMPatch::SavedRegisters::Registers::GP_REGISTERS_STACKLESS, true);
+		ASMPatch patch;
+
+		SigScan scanner(sig.c_str());
+		scanner.Scan();
+		void* addr = scanner.GetAddress();
+
+		patch.AddBytes("\x8B\x07")  // mov eax, dword ptr ds:[edi]
+			.AddBytes("\x8B\xCF")  // mov ecx,edi
+			.PreserveRegisters(savedRegisters)
+			.Push(ASMPatch::Registers::EDI) // Push the Entity_NPC
+			.AddInternalCall(RunPostChampionRegenCallback)
+			.RestoreRegisters(savedRegisters)
+			.AddBytes("\x31\xF6")  // xor esi,esi
+			.AddRelativeJump((char*)exitAddr);
+
+		sASMPatcher.PatchAt(addr, &patch);
+	}
 }
