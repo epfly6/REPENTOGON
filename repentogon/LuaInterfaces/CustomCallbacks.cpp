@@ -12,6 +12,7 @@
 #include "../Patches/XMLData.h"
 #include "Level.h"
 #include "../LuaInit.h"
+#include "../Patches/MainMenuBlock.h"
 
 //Callback tracking for optimizations
 std::bitset<500> CallbackState;  // For new REPENTOGON callbacks. I dont think we will add 500 callbacks but lets set it there for now
@@ -158,16 +159,26 @@ HOOK_METHOD(HUD, Render, () -> void) {
 
 //(POST_)HUD_RENDER callbacks end
 
+
 //Character menu render Callback(id:1023)
 HOOK_METHOD(MenuManager, RenderButtonLayout, () -> void) {
 	super();
 	const int callbackid = 1023;
+	bool menublock_prevstate=0;
+	if (MainMenuInputBlock::_enabled) {
+		menublock_prevstate = 1;
+		MainMenuInputBlock::_enabled = 0;
+	}
 	if (CallbackState.test(callbackid - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
 		lua::LuaStackProtector protector(L);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, g_LuaEngine->runCallbackRegistry->key);
 
 		lua::LuaCaller(L).push(callbackid).call(1);
+	}
+	if (menublock_prevstate) {
+		MainMenuInputBlock::_enabled = menublock_prevstate;
+		menublock_prevstate = 0;
 	}
 }
 
@@ -200,6 +211,7 @@ HOOK_METHOD(SFXManager, Play, (int ID, float Volume, int FrameDelay, bool Loop, 
 	if (!CallbackState.test(callbackid - 1000)) {
 		super(ID, Volume, FrameDelay, Loop, Pitch, Pan);
 		ProcessPostSFXPlay(ID, Volume, FrameDelay, Loop, Pitch, Pan);
+		return;
 	}
 		lua_State* L = g_LuaEngine->_state;
 		lua::LuaStackProtector protector(L);
@@ -512,11 +524,10 @@ void PostAddHeartsCallbacks(Entity_Player* player, int hearts, int heartcallback
 }
 
 HOOK_METHOD(Entity_Player, AddHearts, (int hearts, bool unk) -> void) {	//red hp
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(hearts, unk);
 	}
-	
-	if (CallbackState.test(1009 - 1000)) {
+	else{
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, hearts, 1<<0, std::nullopt);	//do not pass unk
 		hearts = heartcount.value_or(hearts);
 		super(hearts, unk);
@@ -528,10 +539,10 @@ HOOK_METHOD(Entity_Player, AddHearts, (int hearts, bool unk) -> void) {	//red hp
 }
 
 HOOK_METHOD(Entity_Player, AddMaxHearts, (int amount, bool ignoreKeeper) -> void) {	//max hearts
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount, ignoreKeeper);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 1, ignoreKeeper);
 		amount = heartcount.value_or(amount);
 		super(amount, ignoreKeeper);
@@ -542,11 +553,11 @@ HOOK_METHOD(Entity_Player, AddMaxHearts, (int amount, bool ignoreKeeper) -> void
 }
 
 HOOK_METHOD(Entity_Player, AddSoulHearts, (int amount) -> Entity_Player*) {	//soul hp
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount);
 	}
 
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1<<2 ,std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -560,10 +571,10 @@ HOOK_METHOD(Entity_Player, AddSoulHearts, (int amount) -> Entity_Player*) {	//so
 
 
 HOOK_METHOD(Entity_Player, AddBlackHearts, (int amount) -> void) {	//black
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1<<3, std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -577,7 +588,7 @@ HOOK_METHOD(Entity_Player, AddEternalHearts, (int amount) -> void) {	//eternal
 	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
 		super(amount);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 4, std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -588,10 +599,10 @@ HOOK_METHOD(Entity_Player, AddEternalHearts, (int amount) -> void) {	//eternal
 }
 
 HOOK_METHOD(Entity_Player, AddGoldenHearts, (int amount) -> void) {	//golden
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 5, std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -602,10 +613,10 @@ HOOK_METHOD(Entity_Player, AddGoldenHearts, (int amount) -> void) {	//golden
 }
 
 HOOK_METHOD(Entity_Player, AddBoneHearts, (int amount) -> Entity_Player*) {	//bone
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 6, std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -617,11 +628,10 @@ HOOK_METHOD(Entity_Player, AddBoneHearts, (int amount) -> Entity_Player*) {	//bo
 }
 
 HOOK_METHOD(Entity_Player, AddRottenHearts, (int amount, bool unk) -> void) {	//rotten
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount, unk);
 	}
-
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 7, std::nullopt);	//do not pass unk
 		amount = heartcount.value_or(amount);
 		super(amount, unk);
@@ -633,10 +643,10 @@ HOOK_METHOD(Entity_Player, AddRottenHearts, (int amount, bool unk) -> void) {	//
 }
 
 HOOK_METHOD(Entity_Player, AddBrokenHearts, (int amount) -> void) {	//broken
-	if (!CallbackState.test(1009 - 1000) && !CallbackState.test(1010 - 1000)) {
+	if (!CallbackState.test(1009 - 1000)) {
 		super(amount);
 	}
-	if (CallbackState.test(1009 - 1000)) {
+	else {
 		std::optional<int> heartcount = PreAddHeartsCallbacks(this, amount, 1 << 8, std::nullopt);
 		amount = heartcount.value_or(amount);
 		super(amount);
@@ -2898,41 +2908,43 @@ HOOK_METHOD(Level, SetStage, (int levelType, int stageType) -> void) {
 		}
 		else {
 			if (resTop == startTop + 1) {
-				lua_len(L, -1);
-				int len = lua_tointeger(L, -1);
-				lua_pop(L, 1);
+				if (lua_istable(L, -1)) {
+					lua_len(L, -1);
+					int len = (int)lua_tointeger(L, -1);
+					lua_pop(L, 1);
 
-				if (len != 2) {
-					logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid return value, table contains %d elements, expected 2\n", len);
-					goto error;
-				}
-
-				lua_rawgeti(L, -1, 1);
-				int level = lua_tointeger(L, -1);
-				lua_pop(L, 1);
-				if (g_Game->IsGreedMode()) {
-					if (level < 1 || level > 7) {
-						logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid level stage, received %d, should be in range [1; 7] (detected greed(ier) mode)\n", level);
+					if (len != 2) {
+						logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid return value, table contains %d elements, expected 2\n", len);
 						goto error;
 					}
-				}
-				else {
-					if (level < 1 || level > 14) {
-						logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid level stage, received %d, should be in range [1; 14] (detected normal/hard mode)\n", level);
+
+					lua_rawgeti(L, -1, 1);
+					int level = (int)lua_tointeger(L, -1);
+					lua_pop(L, 1);
+					if (g_Game->IsGreedMode()) {
+						if (level < 1 || level > 7) {
+							logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid level stage, received %d, should be in range [1; 7] (detected greed(ier) mode)\n", level);
+							goto error;
+						}
+					}
+					else {
+						if (level < 1 || level > 14) {
+							logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid level stage, received %d, should be in range [1; 14] (detected normal/hard mode)\n", level);
+							goto error;
+						}
+					}
+
+					lua_rawgeti(L, -1, 2);
+					int type = (int)lua_tointeger(L, -1);
+					lua_pop(L, 1);
+					if (type < 0 || type == 3 || type > 5) {
+						logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid stage type, received value %d, expected 0, 1, 2, 4 or 5\n", type);
 						goto error;
 					}
-				}
 
-				lua_rawgeti(L, -1, 2);
-				int type = (int)lua_tointeger(L, -1);
-				lua_pop(L, 1);
-				if (type < 0 || type == 3 || type > 5) {
-					logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid stage type, received value %d, expected 0, 1, 2, 4 or 5\n", type);
-					goto error;
+					super(level, type);
+					return;
 				}
-
-				super(level, type);
-				return;
 			}
 			else {
 				logViewer.AddLog(LogViewer::Game, "MC_PRE_LEVEL_SELECT: Invalid number of return values, got %d, expected 1\n", resTop - startTop);
@@ -3082,7 +3094,7 @@ HOOK_METHOD(Manager, Render, () -> void) {
 	super();
 }
 
-HOOK_METHOD(Level, place_room, (LevelGenerator_Room* slot, RoomConfig* config, uint32_t seed, uint32_t unk) -> bool) {
+HOOK_METHOD(Level, place_room, (LevelGenerator_Room* slot, RoomConfig_Room* config, uint32_t seed, uint32_t unk) -> bool) {
 	const int callbackid = 1137;
 	if (CallbackState.test(callbackid - 1000)) {
 		lua_State* L = g_LuaEngine->_state;
@@ -3095,10 +3107,10 @@ HOOK_METHOD(Level, place_room, (LevelGenerator_Room* slot, RoomConfig* config, u
 		room->context = nullptr;
 		room->room = slot;
 		
-		RoomConfig* other = nullptr;
+		RoomConfig_Room* other = nullptr;
 		lua::LuaResults results = caller.push(config, lua::Metatables::ROOM_CONFIG_ROOM).push(seed).call(1);
 		if (lua_isuserdata(L, -1)) {
-			auto opt = lua::TestUserdata<RoomConfig*>(L, -1, lua::Metatables::ROOM_CONFIG_ROOM);
+			auto opt = lua::TestUserdata<RoomConfig_Room*>(L, -1, lua::Metatables::ROOM_CONFIG_ROOM);
 
 			if (!opt) {
 				KAGE::LogMessage(2, "Invalid userdata returned in MC_PRE_LEVEL_PLACE_ROOM");
