@@ -5,6 +5,17 @@
 __thiscall void Entity_Player::AnimatePickup(ANM2 *param_1,bool param_2,char *param_3);
 */
 
+"538bdc83ec0883e4f883c404558b6b??896c24??8bec6aff68????????64a1????????505383ec085657a1????????33c5508d45??64a3????????8bf9":
+__thiscall void Entity_Player::constructor();
+
+"558bec83e4f883ec0c5356578bf98bb7":
+__thiscall void Entity_Player::update_red_hearts();
+
+"53568bf15780be????????0075":
+__thiscall void Entity_Player::update_golden_hearts();
+
+"5356576a008bf9e8????????8b8f":
+__thiscall void Entity_Player::update_bone_hearts();
 
 //AddCollectible - 
 "558bec6aff68????????64a1????????5081ec88000000a1????????33c58945??5657508d45??64a3????????8bf1":
@@ -59,8 +70,20 @@ __thiscall void Entity_Player::TriggerRoomExit(bool unk);
 "558bec83e4f883ec7ca1????????33c4894424??538bd9":
 __thiscall bool Entity_Player::TriggerDeath(bool checkOnly);
 
+"6a01e8????????c3":
+__thiscall bool Entity_Player::WillPlayerRevive();
+
 "558bec83e4f883ec08568bf15780be????????00":
 __thiscall void Entity_Player::Revive();
+
+"558bec83e4f881ecc4000000a1????????33c4898424????????538bd9":
+__thiscall void Entity_Player::ReviveFromCollectible(uint32_t itemID, bool ownedByThisPlayer);
+
+"558bec83ec24a1????????33c58945??53568bf1":
+__thiscall void Entity_Player::ReviveFromTrinket(uint32_t trinketID);
+
+"8b81????????0fbf91":
+__thiscall int Entity_Player::GetExtraLives();
 
 "558bec568bf1e8????????8b45??8986":
 __thiscall void Entity_Player::SetItemState(CollectibleType collectible);
@@ -91,6 +114,9 @@ __thiscall bool Entity_Player::CanUseCollectible(CollectibleType collectible, in
 
 "558bec83e4f883ec1c538b5d??56578bf98b0d":
 __thiscall bool Entity_Player::HasCollectible(int type, bool ignoreModifiers);
+
+"558bec807d??0056578bf974":
+__thiscall bool Entity_Player::HasTrinket(uint32_t Type, bool ignoreModifiers);
 
 "8b91f01500":
 __thiscall int Entity_Player::GetCollectibleCount();
@@ -223,6 +249,9 @@ __thiscall void Entity_Player::ShuffleCostumes(int seed);
 "558bec83ec2ca1????????33c58945??538b5d":
 __thiscall void Entity_Player::RemoveCollectible(unsigned int CollectibleType, bool IgnoreModifiers, unsigned int ActiveSlot, bool RemoveFromPlayerForm);
 
+"558bec6aff68????????64a1????????5081ec4c020000":
+__thiscall void Entity_Player::UpdateEffects();
+
 "558bec6aff68????????64a1????????5083ec6ca1????????33c58945??5657508d45??64a3????????8bf1":
 __thiscall void Entity_Player::UpdateIsaacPregnancy(bool Cambion);
 
@@ -255,6 +284,9 @@ __thiscall bool Entity_Player::CanUsePill(int pillEffect);
 
 "558bec518b15????????535633f6":
 __thiscall uint32_t Entity_Player::InvalidateCoPlayerItems();
+
+"558bec83e4f883ec2ca1????????33c4894424??538bd956578b7d":
+__thiscall bool Entity_Player::TryRemoveTrinket(uint32_t id);
 
 "558bec83ec30a1????????33c58945??53":
 __thiscall bool Entity_Player::TryRemoveSmeltedTrinket(unsigned int id);
@@ -450,6 +482,12 @@ __thiscall float Entity_Player::GetGreedDonationBreakChance();
 "568bf1e8????????84c074??8d8e":
 __thiscall void Entity_Player::ClearQueueItem();
 
+"558bec6aff68????????64a1????????5081ecec010000":
+__thiscall void Entity_Player::TriggerEffectRemoved(ItemConfig_Item* item, int unused);
+
+"558bec515356576a00":
+__thiscall bool Entity_Player::HasGoldenTrinket(unsigned int TrinketID);
+
 
 struct Entity_Player depends (ANM2, ColorMod, KColor, PlayerCostumeMap, TemporaryEffects) : public Entity { {{
     inline int* GetMaxHearts() {return &this->_maxHearts; }
@@ -575,6 +613,7 @@ struct Entity_Player depends (ANM2, ColorMod, KColor, PlayerCostumeMap, Temporar
 	int _gnawedLeafTimer : 0x12c4;
 	short _bloodLustCounter : 0x12cc;	//not sure whether its actually short but we are on x86 so who cares lul
 	int _metronomeCollectibleID : 0x12d8;
+	int _damageCooldown : 0x1308;
 	int _playerType: 0x130c;
 	float _damage : 0x13b8;
 	float _movespeed : 0x14ac;
@@ -595,6 +634,7 @@ struct Entity_Player depends (ANM2, ColorMod, KColor, PlayerCostumeMap, Temporar
 	int _playerIndex : 0x1550;
 	int _moveDirection : 0x1558;
 	int _headDirection: 0x155c;
+	uint32_t _trinketsID[2] : 0x15e8;
 	vector_SmeltedTrinketDesc _smeltedTrinkets : 0x1670;
 	int _playerForms[15] : 0x1700;
 	KColor _footprintColor1 : 0x1768;
@@ -602,6 +642,7 @@ struct Entity_Player depends (ANM2, ColorMod, KColor, PlayerCostumeMap, Temporar
 	uint32_t _deadEyeCharges : 0x17d0;
 	uint32_t _deadEyeMisses : 0x17d4;
 	int _babySkin : 0x1a0c;
+	int _hallowedGroundCountdown : 0x1cb0;
 	//std_vector_int _wispStorage : 0x1cfc;
 	Entity_Player* _backupPlayer : 0x1d84;
 	int _maggySwingCooldown : 0x1df8;

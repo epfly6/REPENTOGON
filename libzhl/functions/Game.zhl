@@ -4,6 +4,9 @@ __thiscall void Game::constructor();
 "558bec6aff68????????64a1????????5083ec40a1????????33c58945??535657508d45??64a3????????c745??00000000":
 __thiscall void Game::StartDebug(int levelStage,int stageType,int difficulty,std_string* unk); 
 
+"558bec6aff68????????64a1????????5081eca0000000":
+__thiscall void Game::StartFromRerunState(GameState* state);
+
 /*
 FuncSignature Signature_GameIsPaused = {
 	"\x83\xB9\x00\x00\x00\x00\x00\x8B\x15",
@@ -110,11 +113,16 @@ __thiscall void Game::MoveToRandomRoom(bool iAmErrorRoom, int Seed, Entity_Playe
 "558bec83ec0853568b35????????578975":
 __stdcall void Game::Exit(bool ShouldSave);
 
+"558bec8b45??8981????????8981????????f30f1191":
+__thiscall void Game::SetBloom(int Time, float Strength<xmm2>);
+
+"a1????????568bf183b8????????2c":
+__thiscall unsigned int Game::GetStageID(bool unused);
 
 "e8????????c745fcffffffffa3(????????)e8":
 reference Game *g_Game;
 
-struct Game depends (Level, RoomDescriptor, RoomConfig, PlayerManager, Console, ItemOverlay, Ambush, ProceduralItemManager, RoomTransition, GameState, Seeds, DebugRenderer, ScoreSheet, ColorModState, GameOver, ItemPool, Leaderboard, GenericPrompt, DailyChallenge) { {{
+struct Game depends (Level, RoomDescriptor, RoomConfig, BossPool, PlayerManager, Console, ItemOverlay, Ambush, ProceduralItemManager, RoomTransition, GameState, Seeds, DebugRenderer, ScoreSheet, ColorModState, GameOver, ItemPool, Leaderboard, GenericPrompt, DailyChallenge, Vector) { {{
 	Game()
 	{
 		this->constructor();
@@ -228,18 +236,22 @@ struct Game depends (Level, RoomDescriptor, RoomConfig, PlayerManager, Console, 
 	uint32_t _greedModeTreasureRoomIdx : 0x18200;
 	RoomConfig _roomConfig : 0x1879c;
 	ItemPool _itemPool : 0x1A5CC;
+	BossPool _bossPool: 0x1ADF4;
 	PlayerManager _playerManager : 0x1BA40;
 	Seeds _seedEffects : 0x1bb04;
 	Console _console : 0x1bb60;
 	ItemOverlay _itemOverlay : 0x1bcc0;
 	Leaderboard _leaderboard : 0x3d5f0;
 	int _frameCount : 0x1a30dc; // 0x1a30dc
+	Vector _screenShakeOffset : 0x1a30f0;
 	int _treasureRoomsVisited : 0x1c3178;
 	int _planetariumsVisited : 0x1c317c;
 	bool _isRerun : 0x1c31a0;
 	bool _isDebug : 0x1c31a1;
 	Ambush _ambush : 0x1c31b8;
+	unsigned int _challenge : 0x1c319c;
 	DailyChallenge _dailyChallenge: 0x1c3204;
+	int _shopVisits : 0x1c3194;
 	ScoreSheet _scoreSheet : 0x1c32b8;
 	uint32_t _difficulty : 0x243624;
 	bool _shouldLerpColorModState : 0x283b80;
@@ -250,4 +262,7 @@ struct Game depends (Level, RoomDescriptor, RoomConfig, PlayerManager, Console, 
 	int _donationModGreed : 0x1c318c;
 	int _donationModAngel : 0x1c3190;
 	float _lightningIntensity : 0x283c00;
+	float _dizzyIntensity : 0x283c04;
+	float _dizzyTargetIntensity : 0x283c08;
+	float _dizzyIntensityChangeSpeed : 0x283c0c;
 } : 0x285238;

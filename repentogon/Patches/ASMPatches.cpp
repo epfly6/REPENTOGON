@@ -4,6 +4,9 @@
 #include "../LuaInterfaces/LuaRender.h"
 #include "NullItemsAndCostumes.h"
 #include "FamiliarTags.h"
+#include "GetCoinValue.h"
+#include "Anm2Extras.h"
+#include "ExtraLives.h"
 
 #include "ASMPatches/ASMCallbacks.h"
 #include "ASMPatches/ASMDelirium.h"
@@ -85,6 +88,10 @@ void PerformASMPatches() {
 	ASMPatchPrePickupVoidedAbyss();
 	ASMPatchPrePickupComposted();
 	ASMPatchPostChampionRegenCallback();
+	ASMPatchTrinketRender();
+	ASMPatchPickupUpdatePickupGhosts();
+	ASMPatchProjectileDeath();
+	ASMPatchTearDeath();
 
 	// Delirium
 	delirium::AddTransformationCallback();
@@ -112,11 +119,16 @@ void PerformASMPatches() {
 	// Room
 	ASMPatchAmbushWaveCount();
 	ASMPatchMegaSatanEnding();
+	ASMPatchWaterDisabler();
 	PatchRoomClearDelay();
 
 	// Player
 	ASMPatchCheckFamiliar();
 	ASMPatchPlayerStats();
+	ASMPatchPlayerNoShake();
+	ASMPatchPlayerItemNoMetronome();
+	ASMPatchesForExtraLives();
+	ASMPatchMarsDoubleTapWindow();
 
 	// Render
 	LuaRender::PatchglDrawElements();
@@ -125,7 +137,11 @@ void PerformASMPatches() {
 	// External
 	ASMPatchesForFamiliarCustomTags();
 	PatchNullItemAndNullCostumeSupport();
+	ASMPatchesForGetCoinValue();
 	HookImGui();
+
+	// Sprite
+	ASMPatchesForANM2Extras();
 
 	// Tweaks (bug crashes)
 	if (!ASMPatches::FixGodheadEntityPartition()) {
@@ -134,5 +150,9 @@ void PerformASMPatches() {
 
 	if (!ASMPatches::FixTearDetonatorEntityList()) {
 		ZHL::Log("[ERROR] Unable to find signature for Tear Detonator EntityList_EL in UseActiveItem\n");
+	}
+
+	if (!ASMPatches::BerserkSpiritShacklesCrash::Patch()) {
+		ZHL::Log("[ERROR] Error while fixing the Berserk + Spirit Shackles crash\n");
 	}
 }

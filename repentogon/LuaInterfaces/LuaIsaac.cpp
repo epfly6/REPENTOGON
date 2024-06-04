@@ -8,6 +8,9 @@
 #include "Windows.h"
 #include <string>
 #include "../Patches/ChallengesStuff.h"
+#include <dwmapi.h>
+
+#include "../MiscFunctions.h"
 
 static int QueryRadiusRef = -1;
 static int timerFnTable = -1;
@@ -155,7 +158,7 @@ LUA_FUNCTION(Lua_CreateTimer) {
 	}
 
 	int delay = (int)luaL_checkinteger(L, 2);
-	if (delay < 0) {
+	if (delay <= 0) {
 		delay = 1;
 	}
 
@@ -304,9 +307,9 @@ LUA_FUNCTION(Lua_GetSubTypeByName) {
 }
 
 LUA_FUNCTION(Lua_PlayCutscene) {
-	int text = (int)luaL_checknumber(L, 1);
-	string out;
-	g_Game->GetConsole()->RunCommand("cutscene " + to_string(text), &out, NULL);
+	const unsigned int cutscene = (unsigned int)luaL_checkinteger(L, 1);
+	const bool shouldClean = lua::luaL_optboolean(L, 2, false);
+	g_Manager->ShowCutscene(cutscene, shouldClean);
 	return 0;
 }
 
@@ -482,7 +485,63 @@ LUA_FUNCTION(Lua_CenterCursor)
 		SetCursorPos(clientCenter.x, clientCenter.y);
 	}
 	return 0;
-}
+};
+
+LUA_FUNCTION(Lua_SetDWMAttrib)
+{
+	HWND hwnd = GetActiveWindow();
+	DWORD activeProcessId;
+	GetWindowThreadProcessId(hwnd, &activeProcessId);
+	DWORD currentProcessId = GetCurrentProcessId();
+	int32_t attribid = (int32_t)luaL_optinteger(L, 1, 0);
+	int32_t attribval = (int32_t)luaL_optinteger(L, 2, 0);
+
+	switch (attribid) {
+	case (DWMWINDOWATTRIBUTE)DWMWA_CLOAK:
+		return luaL_error(L, "Usage of DWMWA_CLOAK attribute is prohibited!");
+		break;
+	case (DWMWINDOWATTRIBUTE)DWMWA_CLOAKED:
+		return luaL_error(L, "Usage of DWMWA_CLOAKED attribute is prohibited!");
+		break;
+	};
+	if (activeProcessId == currentProcessId) {
+		DwmSetWindowAttribute(hwnd, attribid, &attribval, sizeof(attribval));
+	};
+
+	return 0;
+};
+
+LUA_FUNCTION(Lua_GetDWMAttrib)
+{
+	HWND hwnd = GetActiveWindow();
+	int32_t attribid = (int32_t)luaL_optinteger(L, 1, 0);
+	int32_t attribval;
+	DwmGetWindowAttribute(hwnd, attribid,&attribval,sizeof(attribval));
+	lua_pushinteger(L, attribval);
+	return 1;
+};
+
+LUA_FUNCTION(Lua_SetWindowTitle)
+{
+	const char* text=nullptr;
+	if (!lua_isstring(L,1)) {
+		REPENTOGON::SetStockWindowTitle();
+		return 0;
+	};
+	text = luaL_checkstring(L, 1);
+	char buffer[256];
+	strncpy_s(REPENTOGON::moddedtitle, text, 255);
+	strncpy_s(buffer, REPENTOGON::stocktitle, 255);
+	strncat_s(buffer, REPENTOGON::moddedtitle, 255);
+	SetWindowTextA(GetActiveWindow(), buffer);
+	return 0;
+};
+
+LUA_FUNCTION(Lua_GetWindowTitle)
+{
+	lua_pushstring(L, REPENTOGON::moddedtitle);
+	return 1;
+};
 
 LUA_FUNCTION(Lua_IsInGame) {
 	lua_pushboolean(L, Isaac::IsInGame());
@@ -557,6 +616,90 @@ LUA_FUNCTION(Lua_GetBackdropTypeByName) {
 	return 1;
 }
 
+LUA_FUNCTION(Lua_GetRGON_Changelog) {
+	string text = "Changelog unavailable :(\n";
+	ostringstream outtext;
+	ifstream changelog;
+	changelog.open("rgon_changelog.txt");
+	if (changelog.is_open()) {
+		outtext << changelog.rdbuf();
+		text = outtext.str();
+	};
+	lua_pushstring(L, text.c_str());
+	return 1;
+};
+
+LUA_FUNCTION(Lua_SetIcon) {
+//	int iconsize = luaL_optinteger(L, 2, ICON_SMALL);
+	int resolution=16;
+	bool ignorecap=lua::luaL_optboolean(L,2,false);
+	if(ignorecap){
+		resolution=LR_DEFAULTSIZE;
+	};
+	// switch (iconsize) {
+	// case 0:
+	// 	iconsize = ICON_SMALL;
+	// 	break;
+	// case 1:
+	// 	iconsize = ICON_BIG;
+	// 	break;
+	// };
+	if (lua_isinteger(L, 1)) {
+		int icontoset = (int)luaL_checkinteger(L, 1);
+		switch (icontoset) {
+		case 0:
+			icontoset = 0x65;
+			break;
+		case 1:
+			icontoset = 0x68;
+			break;
+		default:
+			icontoset = 0x65;
+		};
+		HANDLE icon = LoadImageA(GetModuleHandle(nullptr), (LPCSTR)icontoset, IMAGE_ICON, resolution, resolution, 0);
+		HANDLE icon_big = LoadImageA(GetModuleHandle(nullptr), (LPCSTR)icontoset, IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, 0);
+		if (icon) {
+			SendMessage(GetActiveWindow(), WM_SETICON, ICON_SMALL, (LPARAM)icon);
+			SendMessage(GetActiveWindow(), WM_SETICON, ICON_BIG, (LPARAM)icon_big);
+		};
+		return 0;
+	};
+	const char* str=nullptr;
+	str=luaL_optstring(L, 1, str);
+	if (!str) {
+		return 0;
+	};
+	std::string modpath = str;
+	std::string fullpath;
+	g_Manager->GetModManager()->TryRedirectPath(&fullpath,&modpath);
+	HANDLE icon=LoadImageA(nullptr, fullpath.c_str(), IMAGE_ICON, resolution, resolution, LR_LOADFROMFILE | LR_SHARED);
+	if (!icon) {
+		return luaL_error(L, "Icon has failed to load!");
+	};
+	SendMessage(GetActiveWindow(), WM_SETICON, ICON_SMALL, (LPARAM)icon);
+	SendMessage(GetActiveWindow(), WM_SETICON, ICON_BIG, (LPARAM)icon);
+	return 0;
+};
+
+LUA_FUNCTION(Lua_FindTargetPit) {
+	Vector* position = lua::GetUserdata<Vector*>(L, 1, lua::Metatables::VECTOR, "Vector");
+	Vector* targetPosition = lua::GetUserdata<Vector*>(L, 2, lua::Metatables::VECTOR, "Vector");
+	const int pitIndex = (int)luaL_optinteger(L, 3, -1);
+
+	lua_pushinteger(L, Entity_NPC::FindTargetPit(position, targetPosition, pitIndex));
+	return 1;
+}
+
+LUA_FUNCTION(Lua_GetAxisAlignedUnitVectorFromDir) {
+	const int dir = (int)luaL_optinteger(L, 1, -1);
+
+	Vector result = Isaac::GetAxisAlignedUnitVectorFromDir(dir);
+	Vector* toLua = lua::luabridge::UserdataValue<Vector>::place(L, lua::GetMetatableKey(lua::Metatables::VECTOR));
+	*toLua = result;
+
+	return 1;
+}
+
 HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	super();
 
@@ -591,6 +734,11 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "FindInCapsule", Lua_IsaacFindInCapsule);
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "TriggerWindowResize", Lua_TriggerWindowResize);
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "CenterCursor", Lua_CenterCursor);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "SetDwmWindowAttribute", Lua_SetDWMAttrib);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "GetDwmWindowAttribute", Lua_GetDWMAttrib);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "SetWindowTitle", Lua_SetWindowTitle);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "GetWindowTitle", Lua_GetWindowTitle);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "SetIcon", Lua_SetIcon);
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "IsInGame", Lua_IsInGame);
 	//lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "Pause", Lua_IsaacPause); 
 	//lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "Resume", Lua_IsaacResume); //not done, feel free to pick these up they suck
@@ -602,6 +750,9 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "GetBossColorIdByName", Lua_GetBossColorIdxByName); //alias for musclememory
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "GetBackdropIdByName", Lua_GetBackdropTypeByName); //changed to Id to fit the rest didnt release yet so it foine
 	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "StartNewGame", Lua_StartNewGame);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "RGON_GetChangelog", Lua_GetRGON_Changelog);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "FindTargetPit", Lua_FindTargetPit);
+	lua::RegisterGlobalClassFunction(_state, lua::GlobalClasses::Isaac, "GetAxisAlignedUnitVectorFromDir", Lua_GetAxisAlignedUnitVectorFromDir);
 
 	SigScan scanner("558bec83e4f883ec14535657f3");
 	bool result = scanner.Scan();

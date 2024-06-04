@@ -1,6 +1,8 @@
 #include "IsaacRepentance.h"
 #include "HookSystem.h"
 #include "../REPENTOGONOptions.h"
+#include "Log.h"
+#include "imgui.h"
 
 // Key Master affects Devil Deal chance
 HOOK_METHOD(Entity_Slot, TakeDamage, (float Damage, unsigned long long DamageFlags, EntityRef* Source, int DamageCountdown) -> bool) {
@@ -43,26 +45,26 @@ HOOK_METHOD(OptionsConfig, Save, () -> void) {
 	super();
 }
 
-HOOK_METHOD(Game, Update, () -> void) {
+/*HOOK_METHOD(Game, Update, () -> void) {
 	super();
 
 	if (GetDailyChallenge()._id != 0 && !GetDailyChallenge()._isPractice) {
 		if (g_Manager->GetOptions()->_enableDebugConsole || g_Manager->GetOptions()->ModsEnabled()) {
 			if (_leaderboard._displayState < 1 && _frameCount > 0) {
-				End(1); //You shall not pass! (@ wise greybeard dude)
+				End(1);
 			}
 			
 		}
 	}
 }
+*/
 
 HOOK_METHOD(Console, SubmitInput, (bool unk) -> void) {
-	super(unk);
 	Game* game = g_Game;
 	if (game->GetDailyChallenge()._id != 0 && !game->GetDailyChallenge()._isPractice) {
-		if (game->_leaderboard._displayState < 1 && game->_frameCount > 0)
-			game->End(1);
+		return;
 	}
+	super(unk);
 }
 
 // Instruct the stat HUD to recalculate planetarium chance after every new level. Avoids running planetarium chance calculation and associated callbacks every frame
@@ -75,4 +77,28 @@ HOOK_METHOD(Game, RestoreState, (GameState* gstate, bool loaded) -> void) { //so
 	super(gstate, loaded);
 	int playerId = g_Game->GetHUD()->_statHUD.GetPlayerId(g_Game->_playerManager._playerList[0]);
 	g_Game->GetHUD()->_statHUD.RecomputeStats(playerId, 0x100, false); // TODO: enum
+};
+HOOK_STATIC(KAGE_Filesys_FileManager, LoadArchiveFile, (char* path, int unk1, unsigned short unk2)->void, __stdcall) {
+	ZHL::Logger logger;
+	static bool unpacked_flag_check_done=false;
+	static bool unpacked_flag_set = false;
+
+	if (!unpacked_flag_check_done) {
+		for (int i = 1; i < __argc; i++) {
+			char* arg = __argv[i];
+			if (strcmp("-unpacked", arg) == 0) {
+				logViewer.AddLog("[REPENTOGON]", "Ignoring archives because of the -unpacked flag! Be careful!\n");
+				printf("[REPENTOGON] Ignoring archives because of the -unpacked flag! Be careful!\n");
+				unpacked_flag_set = true;
+			};
+		};
+		unpacked_flag_check_done = true;
+	};
+
+	if (unpacked_flag_set) {
+		return;
+	}
+	else {
+		return super(path, unk1, unk2);
+	};
 };

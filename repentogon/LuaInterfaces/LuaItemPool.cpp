@@ -124,6 +124,7 @@ LUA_FUNCTION(Lua_ItemPoolGetCollectiblesFromPool) {
 		std::vector<PoolItem>& poolItem = itemPool->_pools[itemPoolType]._poolList;
 
 		lua_newtable(L);
+
 		for (const auto& item : poolItem) {
 			//lua_pushinteger(L, idx);
 			lua_newtable(L);
@@ -263,7 +264,7 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "GetNumAvailableTrinkets", Lua_ItemPoolGetNumAvailableTrinkets },
 		{ "UnidentifyPill", Lua_ItemPoolUnidentifyPill },
 		{ "GetPillColor", Lua_ItemPoolGetPillColor },
-		{ "GitBibleUpgrades", Lua_ItemPoolGetBibleUpgrades },
+		{ "GetBibleUpgrades", Lua_ItemPoolGetBibleUpgrades },
 
 		{ NULL, NULL }
 	};

@@ -729,6 +729,7 @@ namespace lua {
 		const char* BeamMT = "Beam";
 		const char* BestiaryMenuMT = "BestiaryMenu";
 		const char* BlendModeMT = "BlendMode";
+		const char* BossPoolMT = "BossPool";
 		const char* CameraMT = "Camera";
 		const char* CapsuleMT = "Capsule";
 		const char* ChallengeMenuMT = "ChallengeMenu";
@@ -809,6 +810,8 @@ namespace lua {
 		const char* WeightedOutcomePickerMT = "WeightedOutcomePicker";
 		const char* CostumeSpriteDescMT = "CostumeSpriteDesc";
 		const char* RailManagerMT = "RailManager";
+		const char* LootListMT = "LootList";
+		const char* LootListEntryMT = "LootListEntry";
 		const char* MinimapConfigMT = "MinimapConfig";
 	}
 

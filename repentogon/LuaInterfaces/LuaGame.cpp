@@ -267,12 +267,80 @@ LUA_FUNCTION(Lua_SetDonationModGreed) {
 	return 0;
 }
 
+LUA_FUNCTION(Lua_SetBloom) {
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	const int time = (int)luaL_checkinteger(L, 2);
+	const float strength = (float)luaL_checknumber(L, 3);
+	game->SetBloom(time, strength);
+
+	return 0;
+}
+
+LUA_FUNCTION(Lua_SetDizzyAmount)
+{
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	float targetIntensity = (float)luaL_checknumber(L, 2);
+	float currentIntensity = (float)luaL_optnumber(L, 3, game->_dizzyIntensity);
+
+	game->_dizzyTargetIntensity = targetIntensity;
+	game->_dizzyIntensity = currentIntensity;
+
+	return 0;
+}
+
+LUA_FUNCTION(Lua_GetDizzyAmount)
+{
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	lua_pushnumber(L, game->_dizzyIntensity);
+
+	return 1;
+}
+
+LUA_FUNCTION(Lua_GameAddShopVisits) {
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	int visitCount = (int)luaL_checkinteger(L, 2);
+	game->_shopVisits += visitCount;
+
+	if (game->_shopVisits >= 6 && !game->IsGreedMode()) {
+		g_Manager->GetPersistentGameData()->TryUnlock(379); // Unlock schoolbag
+	}
+	return 0;
+}
+
+LUA_FUNCTION(Lua_GameGetShopVisits) {
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	lua_pushinteger(L, game->_shopVisits);
+
+	return 1;
+}
+
+LUA_FUNCTION(Lua_ClearErasedEnemies) {
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	game->_erasedEntities.clear();
+
+	return 0;
+}
+
+LUA_FUNCTION(Lua_RecordPlayerCompletion) {
+	Game* game = lua::GetUserdata<Game*>(L, 1, lua::Metatables::GAME, "Game");
+	int event = (int)luaL_checkinteger(L, 2);
+	if (event < 0 || event > 17) {
+		return luaL_error(L, "Bad CompletionType %d (valid range is 0-17)", event);
+	}
+	g_Manager->RecordPlayerCompletion(event);
+
+	return 0;
+}
+
 HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	super();
 
 	lua::LuaStackProtector protector(_state);
 
 	luaL_Reg functions[] = {
+		{ "ClearErasedEnemies", Lua_ClearErasedEnemies },
+		{ "AddShopVisits", Lua_GameAddShopVisits },
+		{ "GetShopVisits", Lua_GameGetShopVisits },
 		{ "AchievementUnlocksDisallowed", Lua_GameAchievementUnlocksDisallowed},
 		{ "IsPauseMenuOpen", Lua_GameIsPauseMenuOpen},
 		{ "GetPauseMenuState", Lua_GameGetPauseMenuState},
@@ -299,6 +367,10 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "MoveToRandomRoom", Lua_MoveToRandomRoom},
 		{ "SetDonationModAngel", Lua_SetDonationModAngel},
 		{ "SetDonationModGreed", Lua_SetDonationModGreed},
+		{ "SetBloom", Lua_SetBloom},
+		{ "GetDizzyAmount", Lua_GetDizzyAmount},
+		{ "SetDizzyAmount", Lua_SetDizzyAmount},
+		{ "RecordPlayerCompletion", Lua_RecordPlayerCompletion},
 		{ NULL, NULL }
 	};
 	lua::RegisterFunctions(_state, lua::Metatables::GAME, functions);

@@ -164,6 +164,7 @@ namespace lua {
         extern LIBZHL_API const char* BeamMT;
         extern LIBZHL_API const char* BestiaryMenuMT;
         extern LIBZHL_API const char* BlendModeMT;
+        extern LIBZHL_API const char* BossPoolMT;
         extern LIBZHL_API const char* CameraMT;
         extern LIBZHL_API const char* CapsuleMT;
         extern LIBZHL_API const char* ChallengeMenuMT;
@@ -244,6 +245,8 @@ namespace lua {
         extern LIBZHL_API const char* WeightedOutcomePickerMT;
         extern LIBZHL_API const char* CostumeSpriteDescMT;
         extern LIBZHL_API const char* RailManagerMT;
+        extern LIBZHL_API const char* LootListMT;
+        extern LIBZHL_API const char* LootListEntryMT;
         extern LIBZHL_API const char* MinimapConfigMT;
     }
 
