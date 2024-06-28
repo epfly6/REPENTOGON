@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.25">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
@@ -186,7 +186,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -3625,6 +3625,27 @@
   
   
     <li class="md-nav__item">
+      <a href="GridEntityLock.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GridEntityLock
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="GridEntityPressurePlate.html" class="md-nav__link">
         
   
@@ -6987,14 +7008,15 @@
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">⚓︎</a></h2>
 <h3 aria-label="Functions" id="getslot">GetSlot ()<a class="headerlink" href="#getslot" title="Permanent link">⚓︎</a></h3>
 <h4 aria-label="Functions" class="copyable" id="int-getslot">int GetSlot ( )<a class="headerlink" href="#int-getslot" title="Permanent link">⚓︎</a></h4>
-<p>Returns the ID of the <code>PocketItem</code>. Returns <code>0</code> if the slot is empty.
-For cards, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/Card.html">Card</a>.
-For pills, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/PillEffect.html">PillEffect</a>.
-For items, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/CollectibleType.html">CollectibleType</a>.</p>
+<p>For cards, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/Card.html">Card</a>.</p>
+<p>For pills, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/PillColor.html">PillColor</a>.</p>
+<p>For pocket active items, returns the corresponding <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/ActiveSlot.html">ActiveSlot</a> (either <code>ActiveSlot.SLOT_POCKET</code> or <code>ActiveSlot.SLOT_POCKET2</code>).</p>
+<p>Returns <code>0</code> if the slot is empty.</p>
 <hr />
 <h3 aria-label="Functions" id="gettype">GetType ()<a class="headerlink" href="#gettype" title="Permanent link">⚓︎</a></h3>
 <h4 aria-label="Functions" class="copyable" id="pocketitemtype-gettype"><a href="enums/PocketItemType.html">PocketItemType</a> GetType ( )<a class="headerlink" href="#pocketitemtype-gettype" title="Permanent link">⚓︎</a></h4>
-<p>Returns the <a href="enums/PocketItemType.html">PocketItemType</a>. Returns <code>1</code> if the slot is empty.</p>
+<p>Returns the <a href="enums/PocketItemType.html">PocketItemType</a>.</p>
+<p>This value is unreliable if the slot is currently empty, as the game sometimes does not clear it.</p>
 <hr />
 
 
@@ -7070,7 +7092,7 @@ For items, returns <a href="https://wofsauge.github.io/IsaacDocs/rep/enums/Colle
     <script id="__config" type="application/json">{"base": ".", "features": ["search.suggest", "search.highlight", "search.share", "navigation.tabs", "navigation.instant", "navigation.top"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "rep", "provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.081f42fc.min.js"></script>
+      <script src="assets/javascripts/bundle.ad660dcc.min.js"></script>
       
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
       
