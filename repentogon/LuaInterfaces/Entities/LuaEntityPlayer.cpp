@@ -1023,7 +1023,7 @@ LUA_FUNCTION(Lua_PlayerGetPlayerIndex)
 LUA_FUNCTION(Lua_PlayerSetImmaculateConceptionState)
 {
 	Entity_Player* plr = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
-	*plr->GetImmaculateConceptionState() = (int)luaL_checkinteger(L, 2);
+	*plr->GetImmaculateConceptionState() = (uint32_t)luaL_checkinteger(L, 2);
 	return 0;
 }
 
@@ -1055,6 +1055,20 @@ LUA_FUNCTION(Lua_PlayerGetCambionPregnancyLevel)
 	Entity_Player* plr = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
 	lua_pushinteger(L, plr->GetCambionPregnancyLevel());
 	return 1;
+}
+
+LUA_FUNCTION(Lua_PlayerGetConceptionFamiliarFlags)
+{
+	Entity_Player* plr = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	lua_pushinteger(L, plr->_conceptionFamiliarFlags);
+	return 1;
+}
+
+LUA_FUNCTION(Lua_PlayerSetConceptionFamiliarFlags)
+{
+	Entity_Player* plr = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	plr->_conceptionFamiliarFlags = (int)luaL_checkinteger(L, 2);
+	return 0;
 }
 
 LUA_FUNCTION(Lua_PlayerGetBladderCharge)
@@ -2129,7 +2143,7 @@ LUA_FUNCTION(Lua_PlayerAddColEffect) {
 	if ((!additive) || (cooldown != -6942069)) {
 		effs->GetCollectibleEffect(colid)->_cooldown = cooldown;
 	}
-	return 1;
+	return 0;
 }
 
 LUA_FUNCTION(Lua_PlayerAddNullEffect) {
@@ -2151,7 +2165,7 @@ LUA_FUNCTION(Lua_PlayerAddNullEffect) {
 	if ((!additive) || (cooldown != -6942069)) {
 		effs->GetNullEffect(colid)->_cooldown = cooldown;
 	}
-	return 1;
+	return 0;
 }
 
 LUA_FUNCTION(Lua_PlayerAddTrinketEffect) {
@@ -2173,7 +2187,7 @@ LUA_FUNCTION(Lua_PlayerAddTrinketEffect) {
 	if ((!additive) || (cooldown != -6942069)) {
 		effs->GetTrinketEffect(colid)->_cooldown = cooldown;
 	}
-	return 1;
+	return 0;
 }
 
 /*
@@ -2314,6 +2328,42 @@ LUA_FUNCTION(Lua_PlayerHasChanceRevive) {
 	return 1;
 }
 
+LUA_FUNCTION(Lua_PlayerSetBlackHeart) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	const int blackHeart = (const int)luaL_checkinteger(L, 2);
+
+	if ((blackHeart <= player->_soulHearts) && (blackHeart > -1)) {
+		player->_blackHearts |= 1 << (blackHeart >> 1 & 0x1f);
+		player->update_golden_hearts();
+		player->update_bone_hearts();
+	}
+	return 0;
+}
+
+LUA_FUNCTION(Lua_PlayerAddNullCostumeOverride) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	int id = (int)luaL_checkinteger(L, 2);
+	int size = g_Manager->_itemConfig.GetNullItems()->size() - 1;
+	if (id < 0 || id > size) {
+		std::string error = "Invalid null item id " + std::to_string(id) + ", valid range is 0 to " + std::to_string(size);
+		return luaL_argerror(L, 2, error.c_str());
+	}
+	player->AddNullCostume(id);
+	return 0;
+}
+
+// not only does this crash the game, the ONLY thing it does is return 0
+// because it was stubbed in repentance but not removed from the api (even the game still uses it a couple times!)
+LUA_FUNCTION(Lua_PlayerGetBombVariant) {
+	Entity_Player* player = lua::GetUserdata<Entity_Player*>(L, 1, lua::Metatables::ENTITY_PLAYER, "EntityPlayer");
+	BitSet128* flags = lua::GetUserdata<BitSet128*>(L, 2, lua::Metatables::BITSET_128, "BitSet128");
+	bool forceSmall = lua::luaL_checkboolean(L, 3);
+
+	lua_pushinteger(L, 0);
+
+	return 1;
+}
+
 HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 	super();
 
@@ -2410,6 +2460,8 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "SetCambionConceptionState", Lua_PlayerSetCambionConceptionState },
 		{ "UpdateIsaacPregnancy", Lua_PlayerUpdateIsaacPregnancy },
 		{ "GetCambionPregnancyLevel", Lua_PlayerGetCambionPregnancyLevel },
+		{ "GetConceptionFamiliarFlags", Lua_PlayerGetConceptionFamiliarFlags },
+		{ "SetConceptionFamiliarFlags", Lua_PlayerSetConceptionFamiliarFlags },
 		{ "GetBladderCharge", Lua_PlayerGetBladderCharge },
 		{ "SetBladderCharge", Lua_PlayerSetBladderCharge },
 		{ "GetMaxBladderCharge", Lua_PlayerGetMaxBladderCharge },
@@ -2511,7 +2563,6 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "SetHeadDirectionLockTime", Lua_PlayerSetHeadDirectionLockTime },
 		{ "SetHeadDirection", Lua_PlayerSetHeadDirection },
 		{ "AddCollectibleEffect", Lua_PlayerAddColEffect },
-		{ "AddCollectibleEffect", Lua_PlayerAddColEffect },
 		{ "AddNullItemEffect", Lua_PlayerAddNullEffect },
 		{ "BlockCollectible", Lua_BlockCollectible },
 		{ "UnblockCollectible", Lua_UnblockCollectible },
@@ -2523,6 +2574,9 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
 		{ "GetHallowedGroundCountdown", Lua_PlayerGetHallowedGroundCountdown },
 		{ "SetHallowedGroundCountdown", Lua_PlayerSetHallowedGroundCountdown },
 		{ "HasChanceRevive", Lua_PlayerHasChanceRevive },
+		{ "SetBlackHeart", Lua_PlayerSetBlackHeart },
+		{ "AddNullCostume", Lua_PlayerAddNullCostumeOverride },
+		{ "GetBombVariant", Lua_PlayerGetBombVariant },
 		{ NULL, NULL }
 	};
 	lua::RegisterFunctions(_state, lua::Metatables::ENTITY_PLAYER, functions);
